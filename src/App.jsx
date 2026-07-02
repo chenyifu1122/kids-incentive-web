@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Welcome from './pages/Welcome'
 import Home from './pages/Home'
 import Tasks from './pages/Tasks'
@@ -9,8 +9,7 @@ import Admin from './pages/Admin'
 import TabBar from './components/TabBar'
 import { initSession, signOut } from './lib/store'
 
-// 全局上下文
-const AppContext = createContext(null)
+// 鍏ㄥ眬涓婁笅鏂?const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
 
 export default function App() {
@@ -18,7 +17,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // 当前查看的成员ID（管理员可切换查看其他成员）
+  // 褰撳墠鏌ョ湅鐨勬垚鍛業D锛堢鐞嗗憳鍙垏鎹㈡煡鐪嬪叾浠栨垚鍛橈級
   const [viewMemberId, setViewMemberId] = useState(null)
 
   useEffect(() => {
@@ -34,13 +33,13 @@ export default function App() {
         }
       })
       .catch(err => {
-        console.error('会话初始化失败:', err)
+        console.error('浼氳瘽鍒濆鍖栧け璐?', err)
         setError(err.message)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  // 登录成功后的回调
+  // 鐧诲綍鎴愬姛鍚庣殑鍥炶皟
   const onLogin = async (userId) => {
     const { member } = await initSession()
     if (member) {
@@ -51,20 +50,18 @@ export default function App() {
     }
   }
 
-  // 加入/创建家庭后的回调
+  // 鍔犲叆/鍒涘缓瀹跺涵鍚庣殑鍥炶皟
   const onJoined = (member, family) => {
     setSession(prev => ({ ...prev, member, family }))
     setViewMemberId(member.id)
   }
 
-  // 退出家庭
-  const onLeave = () => {
+  // 閫€鍑哄搴?  const onLeave = () => {
     setSession(prev => ({ ...prev, member: null, family: null }))
     setViewMemberId(null)
   }
 
-  // 退出登录
-  const onSignOut = async () => {
+  // 閫€鍑虹櫥褰?  const onSignOut = async () => {
     await signOut()
     setSession({ userId: null, member: null, family: null, loggedIn: false })
     setViewMemberId(null)
@@ -75,7 +72,7 @@ export default function App() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 animate-bounce" />
-          <p className="text-gray-400 text-sm">加载中...</p>
+          <p className="text-gray-400 text-sm">鍔犺浇涓?..</p>
         </div>
       </div>
     )
@@ -85,18 +82,17 @@ export default function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
         <div className="text-center">
-          <p className="text-red-500 mb-2">初始化失败</p>
+          <p className="text-red-500 mb-2">鍒濆鍖栧け璐?/p>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
           <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
-            重新加载
+            閲嶆柊鍔犺浇
           </button>
         </div>
       </div>
     )
   }
 
-  // 未登录或未加入家庭 → 欢迎页
-  if (!session?.loggedIn || !session?.member) {
+  // 鏈櫥褰曟垨鏈姞鍏ュ搴?鈫?娆㈣繋椤?  if (!session?.loggedIn || !session?.member) {
     return (
       <AppContext.Provider value={{ session, onJoined, onLogin }}>
         <Welcome />
@@ -104,8 +100,7 @@ export default function App() {
     )
   }
 
-  // 已加入 → 主界面
-  const isAdmin = session.member.role === 'admin'
+  // 宸插姞鍏?鈫?涓荤晫闈?  const isAdmin = session.member.role === 'admin'
 
   return (
     <AppContext.Provider value={{
@@ -116,7 +111,7 @@ export default function App() {
       setViewMemberId,
       isAdmin,
     }}>
-      <BrowserRouter>
+      <HashRouter>
         <div className="max-w-md mx-auto min-h-screen bg-gray-50 relative">
           <div className="pb-tab">
             <Routes>
@@ -129,7 +124,7 @@ export default function App() {
           </div>
           <TabBar isAdmin={isAdmin} />
         </div>
-      </BrowserRouter>
+      </HashRouter>
     </AppContext.Provider>
   )
 }
