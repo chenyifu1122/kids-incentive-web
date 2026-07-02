@@ -1,18 +1,48 @@
 import { supabase } from './supabase'
 import { DEFAULT_TASKS, DEFAULT_REWARDS, generateInviteCode } from './constants'
 
+// ========== 账号体系 ==========
+
+/** 手机号转虚拟邮箱（用户完全无感） */
+function phoneToEmail(phone) {
+  return `${phone}@kids.app`
+}
+
+/** 注册（手机号+密码） */
+export async function signUp(phone, password) {
+  const email = phoneToEmail(phone)
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) {
+    if (error.message.includes('already registered')) throw new Error('该手机号已注册')
+    throw error
+  }
+  return data
+}
+
+/** 登录（手机号+密码） */
+export async function signIn(phone, password) {
+  const email = phoneToEmail(phone)
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) {
+    if (error.message.includes('Invalid login')) throw new Error('手机号或密码错误')
+    throw error
+  }
+  return data
+}
+
+/** 退出登录 */
+export async function signOut() {
+  await supabase.auth.signOut()
+}
+
 // ========== 会话管理 ==========
 
-/** 初始化会话：获取或创建匿名用户，检查是否已加入家庭 */
+/** 初始化会话：检查登录状态，已登录则查找家庭 */
 export async function initSession() {
-  // 获取现有会话
-  let { data: { session } } = await supabase.auth.getSession()
+  const { data: { session } } = await supabase.auth.getSession()
   
-  // 没有会话则匿名登录
   if (!session) {
-    const { data, error } = await supabase.auth.signInAnonymously()
-    if (error) throw error
-    session = data.session
+    return { userId: null, member: null, loggedIn: false }
   }
 
   const userId = session.user.id
@@ -24,7 +54,7 @@ export async function initSession() {
     .eq('user_id', userId)
     .single()
 
-  return { userId, member }
+  return { userId, member, loggedIn: true }
 }
 
 /** 获取当前认证用户ID */
