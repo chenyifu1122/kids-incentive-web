@@ -7,14 +7,14 @@ import Rewards from './pages/Rewards'
 import Stats from './pages/Stats'
 import Admin from './pages/Admin'
 import TabBar from './components/TabBar'
-import { initSession } from './lib/store'
+import { initSession, signOut } from './lib/store'
 
 // 全局上下文
 const AppContext = createContext(null)
 export const useApp = () => useContext(AppContext)
 
 export default function App() {
-  const [session, setSession] = useState(null)    // { userId, member, family }
+  const [session, setSession] = useState(null)    // { userId, member, family, loggedIn }
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -23,12 +23,14 @@ export default function App() {
 
   useEffect(() => {
     initSession()
-      .then(({ userId, member }) => {
-        if (member) {
-          setSession({ userId, member, family: member.families })
+      .then(({ userId, member, loggedIn }) => {
+        if (loggedIn && member) {
+          setSession({ userId, member, family: member.families, loggedIn: true })
           setViewMemberId(member.id)
+        } else if (loggedIn) {
+          setSession({ userId, member: null, family: null, loggedIn: true })
         } else {
-          setSession({ userId, member: null, family: null })
+          setSession({ userId: null, member: null, family: null, loggedIn: false })
         }
       })
       .catch(err => {
@@ -37,6 +39,17 @@ export default function App() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  // 登录成功后的回调
+  const onLogin = async (userId) => {
+    const { member } = await initSession()
+    if (member) {
+      setSession({ userId, member, family: member.families, loggedIn: true })
+      setViewMemberId(member.id)
+    } else {
+      setSession({ userId, member: null, family: null, loggedIn: true })
+    }
+  }
 
   // 加入/创建家庭后的回调
   const onJoined = (member, family) => {
@@ -47,6 +60,13 @@ export default function App() {
   // 退出家庭
   const onLeave = () => {
     setSession(prev => ({ ...prev, member: null, family: null }))
+    setViewMemberId(null)
+  }
+
+  // 退出登录
+  const onSignOut = async () => {
+    await signOut()
+    setSession({ userId: null, member: null, family: null, loggedIn: false })
     setViewMemberId(null)
   }
 
@@ -75,10 +95,10 @@ export default function App() {
     )
   }
 
-  // 未加入家庭 → 欢迎页
-  if (!session?.member) {
+  // 未登录或未加入家庭 → 欢迎页
+  if (!session?.loggedIn || !session?.member) {
     return (
-      <AppContext.Provider value={{ session, onJoined }}>
+      <AppContext.Provider value={{ session, onJoined, onLogin }}>
         <Welcome />
       </AppContext.Provider>
     )
@@ -91,6 +111,7 @@ export default function App() {
     <AppContext.Provider value={{
       session,
       onLeave,
+      onSignOut,
       viewMemberId,
       setViewMemberId,
       isAdmin,
