@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#16a34a" />
+  <title>儿童激励兑现</title>
+  <style>
+    /* 首屏加载动画 */
+    #splash { position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f0fdf4;z-index:9999;transition:opacity .3s }
+    #splash.hide { opacity:0;pointer-events:none }
+    #splash .coin { width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#facc15,#eab308);animation:bounce .6s infinite alternate }
+    @keyframes bounce { to { transform:translateY(-12px) } }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="splash"><div class="coin"></div></div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
